@@ -1,4 +1,14 @@
 <?php
+
+// นับการเข้าใช้ทางลิงก์ตรงลง counter ของหน้าเมนูกลาง (/app-hits) ครั้งเดียวต่อ session — แบบเดียวกับ usermanage (เพิ่ม 2026-11-11)
+try {
+    if (is_file(__DIR__ . '/../app-hits/app_hits.php')) {
+        require_once __DIR__ . '/../app-hits/app_hits.php';
+        app_hits_count_direct('/data_dictionary/');
+    }
+} catch (\Throwable) {
+}
+
 header('Content-Type: text/html; charset=utf-8');
 header('X-Frame-Options: SAMEORIGIN');
 header('X-Content-Type-Options: nosniff');
