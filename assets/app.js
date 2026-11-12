@@ -42,6 +42,7 @@
     clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
     sliders: '<path d="M4 7h8m5 0h3M4 17h3m5 0h8"/><circle cx="14.5" cy="7" r="2.3"/><circle cx="9.5" cy="17" r="2.3"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
+    down: '<path d="M12 5v14M6 13l6 6 6-6"/>',
     search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
     moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
@@ -69,6 +70,22 @@
     el.setAttribute('viewBox', '0 0 44 44'); el.setAttribute('class', 'ring' + (total && done >= total ? ' full' : '')); el.setAttribute('aria-hidden', 'true');
     el.innerHTML = '<circle class="t" cx="22" cy="22" r="' + r + '"/><circle class="v" cx="22" cy="22" r="' + r + '" stroke-dasharray="' + c.toFixed(2) + '" stroke-dashoffset="' + (c * (1 - p)).toFixed(2) + '"/>';
     return el;
+  }
+  /** ตรา: ตารางช่อง 3x3 แบบเดียวกับแผนที่คอลัมน์ (ทึบเขียว = มีความหมายแล้ว, กลวงเหลือง = ยังไม่มี) */
+  function logo() {
+    var out = '', k = 0, on = [1, 1, 1, 1, 1, 0, 1, 0, 0];
+    for (var y = 0; y < 3; y++) for (var x = 0; x < 3; x++, k++) {
+      out += on[k] ? '<rect x="' + (2 + x * 8) + '" y="' + (2 + y * 8) + '" width="6" height="6" rx="1.6" fill="#2fb8a0"/>'
+        : '<rect x="' + (3 + x * 8) + '" y="' + (3 + y * 8) + '" width="4" height="4" rx="1" fill="none" stroke="#f2a71b" stroke-width="2"/>';
+    }
+    var el = document.createElementNS(NS, 'svg');
+    el.setAttribute('viewBox', '0 0 26 26'); el.setAttribute('class', 'mark'); el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = out; // ข้อความคงที่ในไฟล์นี้เท่านั้น
+    return el;
+  }
+  /** วงแหวนความครบถ้วนพร้อมตัวเลขกลางวง */
+  function pring(done, total, label, cls) {
+    return h('span', { class: 'pring' + (cls ? ' ' + cls : '') }, ring(done, total), h('i', null, label));
   }
   function isDark() {
     var t = document.documentElement.getAttribute('data-theme');
@@ -163,9 +180,10 @@
     app.textContent = '';
     app.appendChild(h('div', { class: 'auth' },
       h('div', { class: 'auth-side' },
+        h('div', { class: 'abrand' }, logo(), 'Data Dictionary'),
         h('div', null, h('h1', null, 'ทุกคอลัมน์มีความหมาย เขียนไว้ที่เดียว'),
           h('p', null, 'Data Dictionary แยกตามโปรเจ็ค ดึงโครงสร้างจากฐานข้อมูลจริง แล้วเติมความหมายโดยทีมงานหรือ Claude')),
-        h('div', { class: 'auth-sample' }, sample.map(function (r) { return h('div', null, h('b', null, r[0]), h('span', null, r[1])); }))),
+        h('div', { class: 'auth-sample' }, sample.map(function (r) { return h('div', null, h('i'), h('b', null, r[0]), h('span', null, r[1])); }))),
       h('div', { class: 'auth-form' }, form)));
     u.focus();
   }
@@ -193,7 +211,7 @@
     }
     app.appendChild(h('div', { class: 'shell' + (folded ? ' folded' : '') },
       h('aside', { class: 'rail' },
-        h('div', { class: 'rail-title' }, h('span', { class: 'logo' }, ico('book')),
+        h('div', { class: 'rail-title' }, h('span', { class: 'logo' }, logo()),
           h('div', { class: 'brand' }, h('b', null, 'Data Dictionary'), h('small', null, 'พจนานุกรมข้อมูล')),
           foldBtn),
         h('button', { class: 'rail-home', id: 'railhome', title: 'ภาพรวม', onclick: function () { S.projects.length ? openDashboard() : renderNoProject(); } }, ico('grid'), h('span', null, 'ภาพรวม')),
@@ -329,10 +347,8 @@
     list.forEach(function (p) {
       rail.appendChild(h('button', { class: 'proj' + (S.project && S.project.code === p.code ? ' on' : ''),
         title: p.name + ' (' + p.code + ') มีความหมายแล้ว ' + pct(p.stats.columns_described, p.stats.columns) + '%', onclick: function () { openProject(p.code); } },
-        h('span', { class: 'pini', 'aria-hidden': 'true' }, p.code.slice(0, 2).toUpperCase()),
-        h('b', null, p.name),
-        h('div', { class: 'meta' }, h('span', null, p.code), h('span', null, pct(p.stats.columns_described, p.stats.columns) + '%')),
-        bar(p.stats.columns_described, p.stats.columns)));
+        pring(p.stats.columns_described, p.stats.columns, pct(p.stats.columns_described, p.stats.columns)),
+        h('span', { class: 'pt' }, h('b', null, p.name), h('small', null, p.code))));
     });
   }
 
@@ -528,7 +544,7 @@
     function drawFind() {
       find.textContent = '';
       search.placeholder = S.mode === 'table' ? 'ค้นหาชื่อตารางหรือคำอธิบาย' : 'ค้นหาชื่อคอลัมน์หรือความหมาย';
-      add(find, [h('div', { class: 'search' }, ico('search'), search), h('div', { class: 'row' },
+      add(find, [h('div', { class: 'search' }, ico('search'), search, h('kbd', { title: 'กด / เพื่อค้นหา' }, '/')), h('div', { class: 'row' },
         seg([['table', 'ตาราง'], ['column', 'คอลัมน์']], S.mode, function (v) { S.mode = v; S.page = 1; drawFind(); v === 'table' ? loadTables() : loadColumns(); search.focus(); }),
         S.mode === 'table' && seg([['all', 'ทั้งหมด'], ['undocumented', 'ยังไม่ครบ'], ['pending', 'รอพิจารณา'], ['dropped', 'ถูกลบ']], S.filter, function (v) { S.filter = v; S.page = 1; drawFind(); loadTables(); })),
       h('div', { class: 'count', id: 'tcount' })]);
@@ -632,10 +648,9 @@
     if (!el) return;
     el.textContent = '';
     add(el, [
-      h('div', { class: 'stat' }, h('b', null, num(s.tables)), 'ตาราง'),
-      h('div', { class: 'stat' }, h('b', null, num(s.columns)), 'คอลัมน์'),
-      h('div', { class: 'stat ringed' }, ring(s.columns_described, s.columns),
-        h('div', null, h('b', null, pct(s.columns_described, s.columns) + '%'), 'มีความหมายแล้ว ' + num(s.columns_described))) ]);
+      h('div', { class: 'cov' }, pring(s.columns_described, s.columns, pct(s.columns_described, s.columns) + '%', 'lg'),
+        h('div', { class: 'covt' }, h('b', null, num(s.columns_described) + ' จาก ' + num(s.columns)),
+          'คอลัมน์มีความหมายแล้ว ใน ' + num(s.tables) + ' ตาราง'))]);
   }
 
   function refreshProject(redraw) {
@@ -763,16 +778,35 @@
     var tmod = h('input', { placeholder: 'เช่น OPD, IPD, ห้องยา', value: t.module, onchange: function () { saveTable('module', tmod); } });
 
     var live = t.columns.filter(function (c) { return !c.dropped; });
+    // แผนที่คอลัมน์: 1 ช่องต่อ 1 คอลัมน์ กดเพื่อไปเขียนความหมายของคอลัมน์นั้น
+    var mapEl = h('div', { class: 'cmap' }), leftEl = h('span', { class: 'cleft', 'aria-live': 'polite' }), cms = {};
+    function goTo(tr) {
+      var el = tr.querySelector('[data-col="d"]');
+      tr.scrollIntoView({ block: 'center' });
+      if (el) el.focus({ preventScroll: true });
+    }
+    var nextBtn = btn('down', 'ไปคอลัมน์ที่ยังว่าง', function () {
+      var el = box.querySelector('tbody tr:not(.done):not(.dropped)');
+      if (el) goTo(el);
+    }, 'small');
+    function drawLeft() {
+      var n = live.filter(function (c) { return !c.description; }).length;
+      leftEl.className = 'cleft' + (n ? '' : ' ok');
+      leftEl.textContent = n ? 'ยังไม่มีความหมาย ' + num(n) + ' จาก ' + num(live.length) + ' คอลัมน์' : 'มีความหมายครบทั้ง ' + num(live.length) + ' คอลัมน์';
+      nextBtn.hidden = !n;
+    }
     box.appendChild(h('div', { class: 'dhead' },
       h('div', { class: 'dtitle' }, h('h2', null, t.name),
         t.type === 'VIEW' && h('span', { class: 'tag' }, 'view'),
         t.dropped && h('span', { class: 'tag drop' }, 'ไม่พบในฐานข้อมูลแล้ว'),
-        h('span', { class: 'muted' }, num(live.length) + ' คอลัมน์' + (t.row_estimate !== null ? ' · ประมาณ ' + num(t.row_estimate) + ' แถว' : '') + (t.engine ? ' · ' + t.engine : '')),
+        h('span', { class: 'dfacts' }, h('span', null, num(live.length) + ' คอลัมน์'),
+          t.row_estimate !== null && h('span', null, 'ประมาณ ' + num(t.row_estimate) + ' แถว'), t.engine && h('span', null, t.engine)),
         savedEl),
       h('div', { class: 'dmeta' },
         h('label', null, h('span', null, 'คำอธิบายตาราง'), tdesc),
         h('label', null, h('span', null, 'กลุ่มงาน'), tmod)),
       h('div', { class: 'dmeta', style: 'grid-template-columns:1fr' }, h('label', null, h('span', null, 'หมายเหตุ'), tnotes)),
+      live.length ? h('div', { class: 'cover' }, mapEl, leftEl, nextBtn) : null,
       h('p', { class: 'hint' }, 'กด ', h('kbd', null, 'Enter'), ' เพื่อบันทึกและไปแถวถัดไป, ', h('kbd', null, 'Shift'), '+', h('kbd', null, 'Enter'), ' เพื่อขึ้นบรรทัดใหม่')));
 
     // ---- ตีความจากข้อมูลจริง / เดาจากชื่อ: ตัวอย่างข้อมูลและข้อเสนอรอพิจารณาของตารางนี้
@@ -885,6 +919,10 @@
     var tbody = h('tbody');
     t.columns.forEach(function (c) {
       var tr = h('tr', { class: (c.description ? 'done' : '') + (c.dropped ? ' dropped' : '') });
+      if (!c.dropped) {
+        cms[c.id] = h('button', { class: 'cm' + (c.description ? ' done' : ''), title: c.name, 'aria-label': 'ไปที่คอลัมน์ ' + c.name, onclick: function () { goTo(tr); } });
+        mapEl.appendChild(cms[c.id]);
+      }
       var R = rows[c.id] = { c: c, els: {}, slots: {}, vals: h('div', { class: 'vals' }), info: h('div', { class: 'info' }) };
       var gtag = c.guessed ? h('button', { class: 'gtag', title: 'ระบบเดาความหมายนี้ให้ กดเมื่อตรวจแล้วว่าถูกต้อง', onclick: function () {
         post('column.save', { id: c.id, confirm: 1 }).then(function () { c.guessed = false; gtag.remove(); markSaved(true); })
@@ -894,7 +932,7 @@
         var body = { id: c.id }; body[field] = el.value;
         post('column.save', body).then(function () {
           c[field] = el.value.trim();
-          if (field === 'description') { tr.classList.toggle('done', !!c.description); syncCounts(); c.guessed = false; if (gtag) gtag.remove(); drawComment(); drawCopyAll(); }
+          if (field === 'description') { tr.classList.toggle('done', !!c.description); if (cms[c.id]) cms[c.id].classList.toggle('done', !!c.description); drawLeft(); syncCounts(); c.guessed = false; if (gtag) gtag.remove(); drawComment(); drawCopyAll(); }
           markSaved(true);
         }).catch(function (e) { markSaved(false, e.message); });
       }
@@ -953,6 +991,7 @@
     box.appendChild(h('table', { class: 'cols' },
       h('thead', null, h('tr', null, h('th', null, 'คอลัมน์'), copyTh, h('th', null, 'ความหมาย'), h('th', null, 'ค่าที่เป็นไปได้ / รหัส'), h('th', { class: 'ref' }, 'อ้างอิงไปที่'))),
       tbody));
+    drawLeft();
     if (!t.columns.length) box.appendChild(h('div', { class: 'none' }, 'ตารางนี้ยังไม่มีข้อมูลคอลัมน์'));
     t.columns.forEach(function (c) { showColumn(rows[c.id]); });
     drawGbar(S.gmsg || ''); S.gmsg = '';
@@ -1201,6 +1240,15 @@
       guide],
       h('button', { class: 'btn primary', onclick: function () { copy(guide.textContent); } }, 'คัดลอกข้อความ'));
   }
+
+  // กด / เพื่อไปที่ช่องค้นหาตาราง (เมื่อไม่ได้พิมพ์อยู่ในช่องอื่นและไม่มีหน้าต่างย่อยเปิดอยู่)
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key !== '/' || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    var tg = ev.target, tag = tg && tg.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.querySelector('.veil')) return;
+    var el = document.querySelector('.tfind .search input') || document.getElementById('railsearch');
+    if (el) { ev.preventDefault(); el.focus(); el.select(); }
+  });
 
   boot();
 })();

@@ -25,11 +25,8 @@ $v = @filemtime(__DIR__ . '/assets/app.js') ?: 1;
 <link rel="icon" href="assets/icon-32.png" sizes="32x32" type="image/png">
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="assets/icon-180.png">
-<meta name="theme-color" content="#5356e6">
+<meta name="theme-color" content="#171b46">
 <script>try { var t = localStorage.getItem('dd-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/app.css?v=<?= max($v, (int)@filemtime(__DIR__ . '/assets/app.css')) ?>">
 </head>
 <body>
